@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
   :root{
     --maroon:#773F3F; --maroon-light:#9C6262;
@@ -95,6 +96,12 @@
   table.eq-table td.eq-ok{color:var(--ok); font-weight:600;}
   table.eq-table td.eq-off{color:var(--warn); font-weight:600;}
   table.eq-table td.eq-dash{color:var(--border); }
+  .tab-nav-bottom{display:flex; justify-content:center; gap:12px; margin:8px 0 20px;}
+  .tab-nav-btn{
+    background:var(--teal); color:#fff; border:none; border-radius:20px;
+    padding:10px 22px; cursor:pointer; font-size:13px; font-family:inherit; font-weight:600;
+  }
+  .tab-nav-btn:hover{background:var(--teal-light);}
 </style>
 </head>
 <body>
@@ -154,7 +161,7 @@
     <span class="badge">Indicador 2 · 2026</span>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="label">Média atual por colaborador</div><div class="value" id="kpi2-atual">—</div></div>
+    <div class="kpi"><div class="label">Média anual por colaborador</div><div class="value" id="kpi2-atual">—</div></div>
   </div>
   <div class="charts">
     <div class="chart-box"><h3>Mês a mês</h3><div class="chart-wrap"><canvas id="chart2-mensal"></canvas></div></div>
@@ -219,6 +226,7 @@
   </div>
   <div class="kpis">
     <div class="kpi"><div class="label">Total no ano</div><div class="value" id="c-kpi1-total">—</div></div>
+    <div class="kpi"><div class="label">Média mensal</div><div class="value" id="c-kpi1-media">—</div></div>
     <div class="kpi"><div class="label">Meta mensal</div><div class="value" id="c-kpi1-meta">—</div></div>
   </div>
   <div class="charts">
@@ -247,7 +255,7 @@
 <section class="indicator">
   <div class="ind-header">
     <h2>3. Quantidade de Equipamentos para Novos Clientes</h2>
-    <span class="badge">Indicador 3 · 2026 · previsto vs realizado por cliente</span>
+    <span class="badge">Indicador 3 · 2026 · quantidade prevista por cliente</span>
   </div>
   <div class="eq-table-wrap" id="c-equip-table"></div>
 </section>
@@ -275,11 +283,11 @@
 <!-- INDICADOR 1 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>1. Bombonas Operadas (por Colaborador e Dia Trabalhado)</h2>
+    <h2>1. Bombonas Operadas (por Colaborador de Limpeza e Dia Trabalhado)</h2>
     <span class="badge">Indicador 1 · 2026 · passe o mouse para ver volume, colaboradores e dias</span>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="label">Total anual</div><div class="value" id="o-kpi1-total">—</div></div>
+    <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi1-total">—</div></div>
   </div>
   <div class="charts">
     <div class="chart-box"><h3>Mês a mês (bombonas / colaborador / dia)</h3><div class="chart-wrap"><canvas id="o-chart1-mensal"></canvas></div></div>
@@ -290,14 +298,14 @@
 <!-- INDICADOR 2 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>2. Bombonas Operadas (por Rota Realizada)</h2>
-    <span class="badge">Indicador 2 · 2026</span>
+    <h2>2. Bombonas Operadas (por Colaborador de Transbordo e Dia Trabalhado)</h2>
+    <span class="badge">Indicador 2 · 2026 · passe o mouse para ver volume, presenças, colaboradores e dias</span>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="label">Total anual</div><div class="value" id="o-kpi2-total">—</div></div>
+    <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi2-total">—</div></div>
   </div>
   <div class="charts">
-    <div class="chart-box"><h3>Mês a mês</h3><div class="chart-wrap"><canvas id="o-chart2-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Mês a mês (bombonas / colaborador / dia)</h3><div class="chart-wrap"><canvas id="o-chart2-mensal"></canvas></div></div>
     <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="o-chart2-trimestral"></canvas></div></div>
   </div>
 </section>
@@ -305,14 +313,14 @@
 <!-- INDICADOR 3 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>3. Custo Equipe de Transbordo e Limpeza (por Tonelada Operada)</h2>
+    <h2>3. Bombonas Operadas (por Rota Realizada)</h2>
     <span class="badge">Indicador 3 · 2026</span>
   </div>
   <div class="kpis">
     <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi3-total">—</div></div>
   </div>
   <div class="charts">
-    <div class="chart-box"><h3>Mês a mês (R$/tonelada)</h3><div class="chart-wrap"><canvas id="o-chart3-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Mês a mês</h3><div class="chart-wrap"><canvas id="o-chart3-mensal"></canvas></div></div>
     <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="o-chart3-trimestral"></canvas></div></div>
   </div>
 </section>
@@ -320,7 +328,7 @@
 <!-- INDICADOR 4 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>4. Custo Coleta de Resíduos (por Tonelada Operada) · Unidade BH</h2>
+    <h2>4. Custo Equipe de Transbordo e Limpeza (por Tonelada Operada)</h2>
     <span class="badge">Indicador 4 · 2026</span>
   </div>
   <div class="kpis">
@@ -335,16 +343,31 @@
 <!-- INDICADOR 5 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>5. Resultado Operacional</h2>
+    <h2>5. Custo Coleta de Resíduos (por Tonelada Operada) · Unidade BH</h2>
     <span class="badge">Indicador 5 · 2026</span>
   </div>
   <div class="kpis">
     <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi5-total">—</div></div>
-    <div class="kpi"><div class="label">Meta anual</div><div class="value" id="o-kpi5-meta">—</div></div>
   </div>
   <div class="charts">
-    <div class="chart-box"><h3>Mês a mês (com meta)</h3><div class="chart-wrap"><canvas id="o-chart5-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Mês a mês (R$/tonelada)</h3><div class="chart-wrap"><canvas id="o-chart5-mensal"></canvas></div></div>
     <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="o-chart5-trimestral"></canvas></div></div>
+  </div>
+</section>
+
+<!-- INDICADOR 6 -->
+<section class="indicator">
+  <div class="ind-header">
+    <h2>6. Resultado Operacional</h2>
+    <span class="badge">Indicador 6 · 2026</span>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi6-total">—</div></div>
+    <div class="kpi"><div class="label">Meta anual</div><div class="value" id="o-kpi6-meta">—</div></div>
+  </div>
+  <div class="charts">
+    <div class="chart-box"><h3>Mês a mês (com meta)</h3><div class="chart-wrap"><canvas id="o-chart6-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="o-chart6-trimestral"></canvas></div></div>
   </div>
 </section>
 
@@ -360,7 +383,7 @@
     <span class="badge">Indicador 1 · 2026</span>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="label">Total anual</div><div class="value" id="d-kpi1-total">—</div></div>
+    <div class="kpi"><div class="label">Média anual</div><div class="value" id="d-kpi1-total">—</div></div>
   </div>
   <div class="charts">
     <div class="chart-box"><h3>Mês a mês</h3><div class="chart-wrap"><canvas id="d-chart1-mensal"></canvas></div></div>
@@ -487,9 +510,7 @@
     <h2>3. Dados Históricos de Impacto Massalas</h2>
     <span class="badge">Indicador 3 · 2018–2026 · Resíduos desviados, CO2 evitado e árvores equivalentes</span>
   </div>
-  <div class="charts" style="grid-template-columns:1fr;">
-    <div class="chart-box"><h3>Ano a ano</h3><div class="chart-wrap tall"><canvas id="im-chart3-anos"></canvas></div></div>
-  </div>
+  <div class="charts" id="im3-charts-container" style="grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));"></div>
 </section>
 
 <!-- INDICADOR 4 -->
@@ -513,7 +534,12 @@
 
 </div>
 
-<footer>Dados vindos automaticamente do Google Sheets · atualização a cada 20 minutos</footer>
+<div class="tab-nav-bottom">
+  <button class="tab-nav-btn" onclick="prevTab()">← Aba anterior</button>
+  <button class="tab-nav-btn" onclick="nextTab()">Próxima aba →</button>
+</div>
+
+<footer>Dados vindos automaticamente do Google Sheets · atualização automática 1x por dia (use "Atualizar agora" para forçar)</footer>
 </div>
 
 <script>
@@ -523,11 +549,19 @@ const GID_COMERCIAL = '19455487';
 const GID_OPERACIONAL = '2037495349';
 const GID_DP = '846434514';
 const GID_IMPACTO = '1557499448';
-const REFRESH_MS = 20 * 60 * 1000;
+const REFRESH_MS = 24 * 60 * 60 * 1000;
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const MESES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const TRIMESTRES = [["Janeiro","Fevereiro","Março"],["Abril","Maio","Junho"],["Julho","Agosto","Setembro"],["Outubro","Novembro","Dezembro"]];
+
+// Plugin de rótulos de valor acima de cada ponto/barra, em todos os gráficos.
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels', {
+  anchor: 'end', align: 'top', offset: 4,
+  color: '#1F4242', font: { family: 'Sora', size: 10, weight: '600' },
+  formatter: (value) => (value === null || value === undefined || isNaN(value)) ? '' : value
+});
 
 const charts = {};
 let countdownTimer = null;
@@ -555,12 +589,33 @@ function cellVal(row, idx){
 }
 
 // ---- Tabs ----
+const TAB_ORDER = ['administrativo','comercial','operacional','dp','impacto'];
+
 function showTab(name){
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   const btn = document.getElementById('tabbtn-' + name);
   if (btn) btn.classList.add('active');
+}
+
+function currentTabIndex(){
+  const active = document.querySelector('.tab-panel.active');
+  if (!active) return 0;
+  const idx = TAB_ORDER.indexOf(active.id.replace('tab-', ''));
+  return idx === -1 ? 0 : idx;
+}
+
+function nextTab(){
+  const idx = currentTabIndex();
+  showTab(TAB_ORDER[(idx + 1) % TAB_ORDER.length]);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function prevTab(){
+  const idx = currentTabIndex();
+  showTab(TAB_ORDER[(idx - 1 + TAB_ORDER.length) % TAB_ORDER.length]);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ---- Chart type toggle ----
@@ -689,6 +744,12 @@ function quarterSum(monthlyValues){
   });
 }
 
+function annualAverage(monthlyValues){
+  const vals = MESES.map(m => monthlyValues[m]).filter(v => v !== null && v !== undefined && !isNaN(v));
+  if (!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0) / vals.length;
+}
+
 // Procura um texto "Meta: N" em qualquer célula do bloco do indicador.
 // Em algumas planilhas essa célula fica numa linha recolhida/oculta e não
 // aparece nos dados — nesse caso, usa o valor padrão informado.
@@ -780,7 +841,8 @@ function parseComercial1(rows, bounds){
   MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
   const meta = findMeta(rows, s, e, 8);
   const totalAnual = MESES.reduce((sum,m) => sum + (values[m]||0), 0);
-  return { values, meta, totalAnual, quarterTotal: quarterSum(values) };
+  const mediaMensal = annualAverage(values);
+  return { values, meta, totalAnual, mediaMensal, quarterTotal: quarterSum(values) };
 }
 
 function parseComercial2(rows, bounds){
@@ -868,7 +930,7 @@ function parseComercial4(rows, bounds){
 }
 
 // ---- Parse each Operacional indicator ----
-// Indicador 1 tem colunas extras (Volume/Colaboradores/Dias) antes do Resultado.
+// Indicador 1 (limpeza) tem colunas extras (Volume/Colaboradores/Dias) antes do Resultado.
 function parseOperacional1(rows, bounds){
   const [s,e] = bounds['1'];
   const monthly = groupByMonth(rows, s, e, [5,6,7,8,9]);
@@ -882,27 +944,38 @@ function parseOperacional1(rows, bounds){
       dias: parseNumberFlexible(ent[2])
     } : null;
   });
-  const totalAnual = parseNumberFlexible(firstNonNull(monthly, 4)) ?? 0;
+  const mediaAnual = annualAverage(values);
+  return { values, detalhes, mediaAnual, quarterAvg: quarterAverage(values) };
+}
+
+// Indicador 2 (transbordo) tem uma coluna a mais que o Indicador 1: Volume,
+// Presenças, Dias, Colaboradores (calculado), Resultado, Média Anual.
+function parseOperacional2(rows, bounds){
+  const [s,e] = bounds['2'];
+  const monthly = groupByMonth(rows, s, e, [5,6,7,8,9,10]);
+  const values = {}, detalhes = {};
+  MESES.forEach(m => {
+    const ent = monthly[m] && monthly[m][0];
+    values[m] = ent ? parseNumberFlexible(ent[4]) : null;
+    detalhes[m] = ent ? {
+      volume: parseNumberFlexible(ent[0]),
+      presencas: parseNumberFlexible(ent[1]),
+      dias: parseNumberFlexible(ent[2]),
+      colaboradores: parseNumberFlexible(ent[3])
+    } : null;
+  });
+  const totalAnual = parseNumberFlexible(firstNonNull(monthly, 5)) ?? 0;
   return { values, detalhes, totalAnual, quarterAvg: quarterAverage(values) };
 }
 
-// Indicadores 2-5 do Operacional compartilham o mesmo layout simples:
+// Indicadores 3-6 do Operacional compartilham o mesmo layout simples:
 // Ano, Mês, Resultado, Total/Média Anual, Trimestre, Média Trimestral.
-function parseOperacional2(rows, bounds){
-  const [s,e] = bounds['2'];
-  const monthly = groupByMonth(rows, s, e, [5,6]);
-  const values = {};
-  MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
-  const totalAnual = parseNumberFlexible(firstNonNull(monthly, 1)) ?? 0;
-  return { values, totalAnual, quarterAvg: quarterAverage(values) };
-}
-
 function parseOperacional3(rows, bounds){
   const [s,e] = bounds['3'];
   const monthly = groupByMonth(rows, s, e, [5,6]);
   const values = {};
   MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
-  const mediaAnual = parseNumberFlexible(firstNonNull(monthly, 1)) ?? 0;
+  const mediaAnual = annualAverage(values);
   return { values, mediaAnual, quarterAvg: quarterAverage(values) };
 }
 
@@ -921,6 +994,15 @@ function parseOperacional5(rows, bounds){
   const values = {};
   MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
   const mediaAnual = parseNumberFlexible(firstNonNull(monthly, 1)) ?? 0;
+  return { values, mediaAnual, quarterAvg: quarterAverage(values) };
+}
+
+function parseOperacional6(rows, bounds){
+  const [s,e] = bounds['6'];
+  const monthly = groupByMonth(rows, s, e, [5,6]);
+  const values = {};
+  MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
+  const mediaAnual = parseNumberFlexible(firstNonNull(monthly, 1)) ?? 0;
   // A meta anual fica numa linha oculta na planilha (não aparece via API) — usa valor fixo de 19%.
   const meta = findMeta(rows, s, e, 19) / 100;
   return { values, mediaAnual, meta, quarterAvg: quarterAverage(values) };
@@ -932,8 +1014,8 @@ function parseDP1(rows, bounds){
   const monthly = groupByMonth(rows, s, e, [5,6]);
   const values = {};
   MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
-  const totalAnual = parseNumberFlexible(firstNonNull(monthly, 1)) ?? 0;
-  return { values, totalAnual, quarterSum: quarterSum(values) };
+  const mediaAnual = annualAverage(values);
+  return { values, mediaAnual, quarterSum: quarterSum(values) };
 }
 
 function parseDP2(rows, bounds){
@@ -1062,6 +1144,28 @@ function parseImpacto3(rows, bounds){
   return { anos: IMPACTO_ANOS, series };
 }
 
+// Renderiza um gráfico + KPI de total histórico para cada série (indicador)
+// do bloco 3 do Impacto, em vez de um único gráfico multi-série.
+function renderImpacto3Charts(im3){
+  const container = document.getElementById('im3-charts-container');
+  const cores = ['#1F4242', '#773F3F', '#8FA83E', '#B87333', '#3E6B6B'];
+  let html = '';
+  im3.series.forEach((s, idx) => {
+    const total = s.data.filter(v => v !== null && v !== undefined && !isNaN(v)).reduce((a,b) => a+b, 0);
+    html += `<div class="chart-box">
+      <h3>${s.label}</h3>
+      <div class="kpis" style="margin-bottom:10px;">
+        <div class="kpi"><div class="label">Total histórico</div><div class="value">${total.toLocaleString('pt-BR')}</div></div>
+      </div>
+      <div class="chart-wrap"><canvas id="im-chart3-serie-${idx}"></canvas></div>
+    </div>`;
+  });
+  container.innerHTML = html;
+  im3.series.forEach((s, idx) => {
+    renderChart('im-chart3-serie-' + idx, im3.anos, s.data, { color: cores[idx % cores.length], seriesLabel: s.label });
+  });
+}
+
 function parseImpacto4(rows, bounds){
   const [s,e] = bounds['4'];
   const monthly = groupByMonth(rows, s, e, [5,6]);
@@ -1102,12 +1206,24 @@ function renderChart(canvasId, labels, data, opts = {}){
   const ctx = document.getElementById(canvasId).getContext('2d');
   const type = opts.forceType || chartType;
   const datasets = [
-    Object.assign({ label: opts.seriesLabel || 'Resultado', data, type }, styleForType(opts.color || '#1F4242', type))
+    Object.assign(
+      { label: opts.seriesLabel || 'Resultado', data, type },
+      styleForType(opts.color || '#1F4242', type),
+      { datalabels: {
+          color: opts.color || '#1F4242',
+          formatter: (value) => {
+            if (value === null || value === undefined || isNaN(value)) return '';
+            return opts.labelFormatter ? opts.labelFormatter(value) : value;
+          }
+        }
+      }
+    )
   ];
   if (opts.meta !== undefined && opts.meta !== null){
     datasets.push({
       label: 'Meta', type: 'line', data: labels.map(() => opts.meta),
-      borderColor: '#B87333', borderDash: [6,4], pointRadius: 0, borderWidth: 2, fill: false
+      borderColor: '#B87333', borderDash: [6,4], pointRadius: 0, borderWidth: 2, fill: false,
+      datalabels: { display: false }
     });
   }
   const allVals = data.filter(v => v !== null && v !== undefined && !isNaN(v));
@@ -1161,7 +1277,7 @@ function renderRankingChart(canvasId, entries, color){
   const data = entries.map(e => e[1]);
   charts[canvasId] = new Chart(ctx, {
     type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: color, borderRadius: 6 }] },
+    data: { labels, datasets: [{ data, backgroundColor: color, borderRadius: 6, datalabels: { anchor: 'end', align: 'right', color: '#1F4242' } }] },
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: {
@@ -1182,7 +1298,11 @@ function renderMultiChart(canvasId, labels, series, opts = {}){
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId).getContext('2d');
   const type = opts.forceType || chartType;
-  const datasets = series.map(s => Object.assign({ label: s.label, data: s.data, type }, styleForType(s.color, type)));
+  const datasets = series.map(s => Object.assign(
+    { label: s.label, data: s.data, type },
+    styleForType(s.color, type),
+    { datalabels: { color: s.color, formatter: (value) => (value === null || value === undefined || isNaN(value)) ? '' : value } }
+  ));
   const allVals = series.flatMap(s => s.data).filter(v => v !== null && v !== undefined && !isNaN(v));
   let yMax;
   if (allVals.length && type === 'line'){
@@ -1250,7 +1370,7 @@ function renderAdministrativo(rows){
   const i4 = parseIndicador4(rows, bounds);
   document.getElementById('kpi4-total').textContent = fmtBRL(i4.totalAnual);
   renderChart('chart4-mensal', MESES_ABREV, MESES.map(m => i4.values[m]), {
-    color: '#B87333', seriesLabel: 'Perda (R$)',
+    color: '#B87333', seriesLabel: 'Perda (R$)', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => {
       const mes = MESES[ctx.dataIndex];
       const total = 'Total: ' + fmtBRL(ctx.parsed.y);
@@ -1261,7 +1381,7 @@ function renderAdministrativo(rows){
     } }
   });
   renderChart('chart4-trimestral', ['Q1','Q2','Q3','Q4'], i4.quarterSum, {
-    color: '#B87333', seriesLabel: 'Perda (R$)',
+    color: '#B87333', seriesLabel: 'Perda (R$)', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
   });
 
@@ -1282,33 +1402,24 @@ function renderAdministrativo(rows){
 function renderEquipTable(parsed){
   const container = document.getElementById('c-equip-table');
   const cols = parsed.usedCols;
-  let html = '<table class="eq-table"><thead><tr><th>Cliente</th><th>Periodicidade</th><th>Métrica</th>';
+  let html = '<table class="eq-table"><thead><tr><th>Cliente</th><th>Periodicidade</th>';
   cols.forEach(c => { html += `<th>${c.label}</th>`; });
   html += '</tr></thead><tbody>';
-  const ordem = ['Prevista','Realizada','Diferença'];
   parsed.clientes.forEach(cl => {
-    ordem.forEach((metrica, idx) => {
-      const linha = cl.linhas[metrica];
-      if (!linha) return;
-      html += '<tr>';
-      if (idx === 0){
-        html += `<td class="eq-client" rowspan="${ordem.length}">${cl.cliente}</td>`;
-        html += `<td class="eq-period" rowspan="${ordem.length}">${cl.periodicidade}</td>`;
+    const linha = cl.linhas['Prevista'];
+    if (!linha) return;
+    html += '<tr>';
+    html += `<td class="eq-client">${cl.cliente}</td>`;
+    html += `<td class="eq-period">${cl.periodicidade}</td>`;
+    cols.forEach(c => {
+      const v = linha[c.label];
+      if (v === null || v === '-' || v === '' || v === undefined){
+        html += '<td class="eq-dash">—</td>';
+      } else {
+        html += `<td>${v}</td>`;
       }
-      html += `<td class="eq-metric">${metrica}</td>`;
-      cols.forEach(c => {
-        const v = linha[c.label];
-        if (v === null || v === '-' || v === '' || v === undefined){
-          html += '<td class="eq-dash">—</td>';
-        } else if (metrica === 'Diferença'){
-          const n = parseNumberFlexible(v);
-          html += `<td class="${n === 0 ? 'eq-ok' : 'eq-off'}">${v}</td>`;
-        } else {
-          html += `<td>${v}</td>`;
-        }
-      });
-      html += '</tr>';
     });
+    html += '</tr>';
   });
   html += '</tbody></table>';
   container.innerHTML = html;
@@ -1322,6 +1433,7 @@ function renderComercial(rows){
 
   const c1 = parseComercial1(rows, bounds);
   document.getElementById('c-kpi1-total').textContent = c1.totalAnual;
+  document.getElementById('c-kpi1-media').textContent = c1.mediaMensal !== null ? Math.round(c1.mediaMensal * 10) / 10 : '—';
   document.getElementById('c-kpi1-meta').textContent = c1.meta + ' / mês';
   renderChart('c-chart1-mensal', MESES_ABREV, MESES.map(m => c1.values[m]), {
     color: '#1F4242', seriesLabel: 'Propostas', meta: c1.meta
@@ -1363,12 +1475,12 @@ function renderComercial(rows){
 // ---- Render: Operacional ----
 function renderOperacional(rows){
   const bounds = findBlocks(rows);
-  if (!bounds['1'] || !bounds['2'] || !bounds['3'] || !bounds['4'] || !bounds['5']) {
+  if (!bounds['1'] || !bounds['2'] || !bounds['3'] || !bounds['4'] || !bounds['5'] || !bounds['6']) {
     throw new Error('Não foi possível localizar todos os indicadores do Operacional (estrutura pode ter mudado).');
   }
 
   const o1 = parseOperacional1(rows, bounds);
-  document.getElementById('o-kpi1-total').textContent = Math.round(o1.totalAnual);
+  document.getElementById('o-kpi1-total').textContent = o1.mediaAnual !== null ? Math.round(o1.mediaAnual) : '—';
   renderChart('o-chart1-mensal', MESES_ABREV, MESES.map(m => o1.values[m]), {
     color: '#1F4242', seriesLabel: 'Bombonas/colaborador/dia',
     tooltipCallbacks: { label: (ctx) => {
@@ -1383,43 +1495,57 @@ function renderOperacional(rows){
 
   const o2 = parseOperacional2(rows, bounds);
   document.getElementById('o-kpi2-total').textContent = Math.round(o2.totalAnual);
-  renderChart('o-chart2-mensal', MESES_ABREV, MESES.map(m => o2.values[m] !== null ? Math.round(o2.values[m]) : null), { color: '#3E6B6B', seriesLabel: 'Bombonas (rotas)' });
+  renderChart('o-chart2-mensal', MESES_ABREV, MESES.map(m => o2.values[m]), {
+    color: '#3E6B6B', seriesLabel: 'Bombonas/colaborador/dia',
+    tooltipCallbacks: { label: (ctx) => {
+      const mes = MESES[ctx.dataIndex];
+      const det = o2.detalhes[mes];
+      const principal = 'Resultado: ' + ctx.parsed.y;
+      if (!det) return principal;
+      return [principal, 'Volume B50L: ' + det.volume, 'Presenças: ' + det.presencas, 'Colaboradores: ' + det.colaboradores, 'Dias trabalhados: ' + det.dias];
+    } }
+  });
   renderChart('o-chart2-trimestral', ['Q1','Q2','Q3','Q4'], o2.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
 
   const o3 = parseOperacional3(rows, bounds);
-  document.getElementById('o-kpi3-total').textContent = fmtBRL(o3.mediaAnual);
-  renderChart('o-chart3-mensal', MESES_ABREV, MESES.map(m => o3.values[m]), {
-    color: '#773F3F', seriesLabel: 'Custo/tonelada',
-    tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
-  });
-  renderChart('o-chart3-trimestral', ['Q1','Q2','Q3','Q4'], o3.quarterAvg, {
-    color: '#9C6262', seriesLabel: 'Média',
-    tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
-  });
+  document.getElementById('o-kpi3-total').textContent = o3.mediaAnual !== null ? Math.round(o3.mediaAnual) : '—';
+  renderChart('o-chart3-mensal', MESES_ABREV, MESES.map(m => o3.values[m] !== null ? Math.round(o3.values[m]) : null), { color: '#8FA83E', seriesLabel: 'Bombonas (rotas)' });
+  renderChart('o-chart3-trimestral', ['Q1','Q2','Q3','Q4'], o3.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
 
   const o4 = parseOperacional4(rows, bounds);
   document.getElementById('o-kpi4-total').textContent = fmtBRL(o4.mediaAnual);
   renderChart('o-chart4-mensal', MESES_ABREV, MESES.map(m => o4.values[m]), {
-    color: '#B87333', seriesLabel: 'Custo/tonelada',
+    color: '#773F3F', seriesLabel: 'Custo/tonelada', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
   });
   renderChart('o-chart4-trimestral', ['Q1','Q2','Q3','Q4'], o4.quarterAvg, {
-    color: '#8FA83E', seriesLabel: 'Média',
+    color: '#9C6262', seriesLabel: 'Média', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
   });
 
   const o5 = parseOperacional5(rows, bounds);
-  document.getElementById('o-kpi5-total').textContent = fmtPct(o5.mediaAnual);
-  document.getElementById('o-kpi5-meta').textContent = fmtPct(o5.meta);
-  renderChart('o-chart5-mensal', MESES_ABREV, MESES.map(m => o5.values[m] !== null ? Math.round(o5.values[m]*1000)/10 : null), {
-    color: '#1F4242', seriesLabel: 'Resultado', meta: Math.round(o5.meta*1000)/10,
+  document.getElementById('o-kpi5-total').textContent = fmtBRL(o5.mediaAnual);
+  renderChart('o-chart5-mensal', MESES_ABREV, MESES.map(m => o5.values[m]), {
+    color: '#B87333', seriesLabel: 'Custo/tonelada', labelFormatter: fmtBRL,
+    tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
+  });
+  renderChart('o-chart5-trimestral', ['Q1','Q2','Q3','Q4'], o5.quarterAvg, {
+    color: '#8FA83E', seriesLabel: 'Média', labelFormatter: fmtBRL,
+    tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
+  });
+
+  const o6 = parseOperacional6(rows, bounds);
+  document.getElementById('o-kpi6-total').textContent = fmtPct(o6.mediaAnual);
+  document.getElementById('o-kpi6-meta').textContent = fmtPct(o6.meta);
+  renderChart('o-chart6-mensal', MESES_ABREV, MESES.map(m => o6.values[m] !== null ? Math.round(o6.values[m]*1000)/10 : null), {
+    color: '#1F4242', seriesLabel: 'Resultado', meta: Math.round(o6.meta*1000)/10, labelFormatter: (v) => v + '%',
     tooltipCallbacks: { label: (ctx) => {
       if (ctx.dataset.label === 'Meta') return 'Meta: ' + ctx.parsed.y + '%';
       return 'Resultado: ' + ctx.parsed.y + '%';
     } }
   });
-  renderChart('o-chart5-trimestral', ['Q1','Q2','Q3','Q4'], o5.quarterAvg.map(v => v !== null ? Math.round(v*1000)/10 : null), {
-    color: '#8FC93E', seriesLabel: 'Média',
+  renderChart('o-chart6-trimestral', ['Q1','Q2','Q3','Q4'], o6.quarterAvg.map(v => v !== null ? Math.round(v*1000)/10 : null), {
+    color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => v + '%',
     tooltipCallbacks: { label: (ctx) => ctx.parsed.y + '%' }
   });
 }
@@ -1432,7 +1558,7 @@ function renderDP(rows){
   }
 
   const d1 = parseDP1(rows, bounds);
-  document.getElementById('d-kpi1-total').textContent = d1.totalAnual;
+  document.getElementById('d-kpi1-total').textContent = d1.mediaAnual !== null ? Math.round(d1.mediaAnual * 10) / 10 : '—';
   renderChart('d-chart1-mensal', MESES_ABREV, MESES.map(m => d1.values[m]), { color: '#1F4242', seriesLabel: 'Faltas' });
   renderChart('d-chart1-trimestral', ['Q1','Q2','Q3','Q4'], d1.quarterSum, { color: '#8FC93E', seriesLabel: 'Faltas' });
 
@@ -1499,9 +1625,7 @@ function renderImpacto(rows){
   renderChart('im-chart2-trimestral', ['Q1','Q2','Q3','Q4'], im2.quarterSum, { color: '#8FC93E', seriesLabel: 'Resíduos (ton)' });
 
   const im3 = parseImpacto3(rows, bounds);
-  renderMultiChart('im-chart3-anos', im3.anos, im3.series.map((s, idx) => ({
-    label: s.label, data: s.data, color: ['#1F4242', '#773F3F', '#8FA83E'][idx % 3]
-  })));
+  renderImpacto3Charts(im3);
 
   const im4 = parseImpacto4(rows, bounds);
   document.getElementById('im-kpi4-total').textContent = im4.totalAnual.toLocaleString('pt-BR');
@@ -1554,9 +1678,10 @@ function scheduleCountdown(){
       document.getElementById('nextUpdate').textContent = 'atualizando...';
       return;
     }
-    const mm = String(Math.floor(diff/60000)).padStart(2,'0');
+    const hh = String(Math.floor(diff/3600000)).padStart(2,'0');
+    const mm = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
     const ss = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
-    document.getElementById('nextUpdate').textContent = `próxima atualização em ${mm}:${ss}`;
+    document.getElementById('nextUpdate').textContent = `próxima atualização em ${hh}:${mm}:${ss}`;
   }, 1000);
 }
 
