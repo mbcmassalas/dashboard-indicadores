@@ -1318,18 +1318,21 @@ function renderMultiChart(canvasId, labels, series, opts = {}){
     styleForType(s.color, type),
     { datalabels: {
         color: s.color,
-        align: 'top',
+        align: s.align || 'top',
         formatter: (value) => (value === null || value === undefined || isNaN(value) || value === 0) ? '' : fmtNum(value)
       }
     }
   ));
   const allVals = series.flatMap(s => s.data).filter(v => v !== null && v !== undefined && !isNaN(v));
-  let yMax;
+  let yMax, yMin = 0;
   if (allVals.length && type === 'line'){
     const dMax = Math.max(...allVals);
-    const dMin = Math.min(...allVals, 0);
+    // Com autoZoom, a base do eixo acompanha o menor valor real (em vez de 0),
+    // separando visualmente linhas que ficam próximas umas das outras.
+    const dMin = opts.autoZoom ? Math.min(...allVals) : Math.min(...allVals, 0);
     const pad = Math.max((dMax - dMin) * 0.32, dMax * 0.18, 2);
     yMax = Math.ceil(dMax + pad);
+    yMin = opts.autoZoom ? Math.max(0, Math.floor(dMin - pad)) : 0;
   }
   charts[canvasId] = new Chart(ctx, {
     type: type,
@@ -1351,7 +1354,7 @@ function renderMultiChart(canvasId, labels, series, opts = {}){
         y: {
           ticks: { color: '#5B7070', font: { family: 'Sora' }, display: true, maxTicksLimit: 7 },
           grid: { color: '#E3E7E1' },
-          min: 0, max: yMax, beginAtZero: true
+          min: yMin, max: yMax, beginAtZero: !opts.autoZoom
         }
       }
     }
@@ -1579,7 +1582,7 @@ function renderDP(rows){
   }
 
   const d1 = parseDP1(rows, bounds);
-  document.getElementById('d-kpi1-total').textContent = d1.mediaAnual !== null ? fmtNum(d1.mediaAnual, 1) : '—';
+  document.getElementById('d-kpi1-total').textContent = d1.mediaAnual !== null ? fmtNum(d1.mediaAnual, 0) : '—';
   renderChart('d-chart1-mensal', MESES_ABREV, MESES.map(m => d1.values[m]), { color: '#1F4242', seriesLabel: 'Faltas' });
   renderChart('d-chart1-trimestral', ['Q1','Q2','Q3','Q4'], d1.quarterSum, { color: '#8FC93E', seriesLabel: 'Faltas' });
 
@@ -1595,15 +1598,15 @@ function renderDP(rows){
   document.getElementById('d-kpi3-base').textContent = d3.mediaAnual.base !== null ? fmtNum(Math.round(d3.mediaAnual.base)) + 'h' : '—';
   document.getElementById('d-kpi3-administrativo').textContent = d3.mediaAnual.administrativo !== null ? fmtNum(Math.round(d3.mediaAnual.administrativo)) + 'h' : '—';
   renderMultiChart('d-chart3-mensal', MESES_ABREV, [
-    { label: 'Coleta', color: '#1F4242', data: MESES.map(m => d3.coleta[m] !== null ? Math.round(d3.coleta[m]) : null) },
+    { label: 'Coleta', color: '#1F4242', align: 'top', data: MESES.map(m => d3.coleta[m] !== null ? Math.round(d3.coleta[m]) : null) },
     { label: 'Base', color: '#B87333', data: MESES.map(m => d3.base[m] !== null ? Math.round(d3.base[m]) : null) },
-    { label: 'Administrativo', color: '#773F3F', data: MESES.map(m => d3.administrativo[m] !== null ? Math.round(d3.administrativo[m]) : null) }
-  ]);
+    { label: 'Administrativo', color: '#773F3F', align: 'bottom', data: MESES.map(m => d3.administrativo[m] !== null ? Math.round(d3.administrativo[m]) : null) }
+  ], { autoZoom: true });
   renderMultiChart('d-chart3-trimestral', ['Q1','Q2','Q3','Q4'], [
-    { label: 'Coleta', color: '#1F4242', data: d3.quarterAvgColeta.map(v => v !== null ? Math.round(v) : null) },
+    { label: 'Coleta', color: '#1F4242', align: 'top', data: d3.quarterAvgColeta.map(v => v !== null ? Math.round(v) : null) },
     { label: 'Base', color: '#B87333', data: d3.quarterAvgBase.map(v => v !== null ? Math.round(v) : null) },
-    { label: 'Administrativo', color: '#773F3F', data: d3.quarterAvgAdministrativo.map(v => v !== null ? Math.round(v) : null) }
-  ]);
+    { label: 'Administrativo', color: '#773F3F', align: 'bottom', data: d3.quarterAvgAdministrativo.map(v => v !== null ? Math.round(v) : null) }
+  ], { autoZoom: true });
 
   const d4 = parseDP4(rows, bounds);
   document.getElementById('d-kpi4-total').textContent = fmtNum(d4.totalAnual);
