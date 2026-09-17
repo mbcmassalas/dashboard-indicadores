@@ -1155,20 +1155,27 @@ function parseImpacto3(rows, bounds){
 function renderImpacto3Charts(im3){
   const container = document.getElementById('im3-charts-container');
   const cores = ['#1F4242', '#773F3F', '#8FA83E', '#B87333', '#3E6B6B'];
+  // Séries que representam contagens inteiras (ex.: árvores) não devem mostrar casas decimais.
+  const isContagem = (label) => /árvore/i.test(label);
   let html = '';
   im3.series.forEach((s, idx) => {
-    const total = s.data.filter(v => v !== null && v !== undefined && !isNaN(v)).reduce((a,b) => a+b, 0);
+    const dados = isContagem(s.label) ? s.data.map(v => v !== null && v !== undefined ? Math.round(v) : v) : s.data;
+    const total = dados.filter(v => v !== null && v !== undefined && !isNaN(v)).reduce((a,b) => a+b, 0);
     html += `<div class="chart-box">
       <h3>${s.label}</h3>
       <div class="kpis" style="margin-bottom:10px;">
-        <div class="kpi"><div class="label">Total histórico</div><div class="value">${fmtNum(total)}</div></div>
+        <div class="kpi"><div class="label">Total histórico</div><div class="value">${fmtNum(total, isContagem(s.label) ? 0 : 2)}</div></div>
       </div>
       <div class="chart-wrap"><canvas id="im-chart3-serie-${idx}"></canvas></div>
     </div>`;
   });
   container.innerHTML = html;
   im3.series.forEach((s, idx) => {
-    renderChart('im-chart3-serie-' + idx, im3.anos, s.data, { color: cores[idx % cores.length], seriesLabel: s.label });
+    const dados = isContagem(s.label) ? s.data.map(v => v !== null && v !== undefined ? Math.round(v) : v) : s.data;
+    renderChart('im-chart3-serie-' + idx, im3.anos, dados, {
+      color: cores[idx % cores.length], seriesLabel: s.label,
+      labelFormatter: isContagem(s.label) ? (v) => fmtNum(v, 0) : undefined
+    });
   });
 }
 
@@ -1200,24 +1207,6 @@ function parseImpacto4(rows, bounds){
 // ---- Chart helpers ----
 function destroyChart(id){ if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
-// Escolhe a direção do rótulo (ângulo em graus, 0=topo, sentido horário) com
-// base na tendência da linha ao redor do ponto, pra evitar que o número fique
-// em cima do próprio traço quando a linha sobe ou desce logo em seguida.
-function labelAlign(data, idx, type){
-  if (type !== 'line') return 'top';
-  const cur = data[idx];
-  if (cur === null || cur === undefined || isNaN(cur)) return 'top';
-  const prev = idx > 0 ? data[idx - 1] : null;
-  const next = idx < data.length - 1 ? data[idx + 1] : null;
-  const risingAfter = (next !== null && next !== undefined && !isNaN(next) && next > cur);
-  const fallingAfter = (next !== null && next !== undefined && !isNaN(next) && next < cur);
-  const risingBefore = (prev !== null && prev !== undefined && !isNaN(prev) && cur > prev);
-  const fallingBefore = (prev !== null && prev !== undefined && !isNaN(prev) && cur < prev);
-  if (risingAfter && !fallingBefore) return -55; // linha sobe daqui pra frente: rótulo pende pra esquerda
-  if (fallingAfter && !risingBefore) return 55; // linha caiu até aqui e segue caindo: rótulo pende pra direita
-  return 'top';
-}
-
 function styleForType(color, type){
   if (type === 'line'){
     return { borderColor: color, backgroundColor: color, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, fill: false, borderWidth: 2 };
@@ -1235,7 +1224,7 @@ function renderChart(canvasId, labels, data, opts = {}){
       styleForType(opts.color || '#1F4242', type),
       { datalabels: {
           color: opts.color || '#1F4242',
-          align: (ctx2) => labelAlign(data, ctx2.dataIndex, type),
+          align: 'top',
           formatter: (value) => {
             if (value === null || value === undefined || isNaN(value) || value === 0) return '';
             return opts.labelFormatter ? opts.labelFormatter(value) : fmtNum(value);
@@ -1329,8 +1318,7 @@ function renderMultiChart(canvasId, labels, series, opts = {}){
     styleForType(s.color, type),
     { datalabels: {
         color: s.color,
-        display: 'auto',
-        align: (ctx2) => labelAlign(s.data, ctx2.dataIndex, type),
+        align: 'top',
         formatter: (value) => (value === null || value === undefined || isNaN(value) || value === 0) ? '' : fmtNum(value)
       }
     }
@@ -1380,7 +1368,7 @@ function renderAdministrativo(rows){
   const i1 = parseIndicador1(rows, bounds);
   document.getElementById('kpi1-atual').textContent = i1.atual !== null && i1.atual !== undefined ? fmtNum(i1.atual) : '—';
   renderChart('chart1-mensal', MESES_ABREV, MESES.map(m => i1.values[m]), { color: '#1F4242', seriesLabel: 'Contratos ativos' });
-  renderChart('chart1-trimestral', ['Q1','Q2','Q3','Q4'], i1.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
+  renderChart('chart1-trimestral', ['Q1','Q2','Q3','Q4'], i1.quarterAvg.map(v => v !== null ? Math.round(v) : null), { color: '#8FC93E', seriesLabel: 'Média' });
 
   const i2 = parseIndicador2(rows, bounds);
   document.getElementById('kpi2-atual').textContent = i2.atual !== null && i2.atual !== undefined ? fmtNum(i2.atual) : '—';
