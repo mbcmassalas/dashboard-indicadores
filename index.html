@@ -417,9 +417,9 @@
     <div class="kpi"><div class="label">Média anual · Base</div><div class="value" id="d-kpi3-base">—</div></div>
     <div class="kpi"><div class="label">Média anual · Administrativo</div><div class="value" id="d-kpi3-administrativo">—</div></div>
   </div>
-  <div class="charts">
-    <div class="chart-box"><h3>Mês a mês</h3><div class="chart-wrap"><canvas id="d-chart3-mensal"></canvas></div></div>
-    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="d-chart3-trimestral"></canvas></div></div>
+  <div class="charts" style="grid-template-columns:1fr;">
+    <div class="chart-box"><h3>Mês a mês</h3><div class="chart-wrap tall"><canvas id="d-chart3-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap tall"><canvas id="d-chart3-trimestral"></canvas></div></div>
   </div>
 </section>
 
@@ -555,14 +555,6 @@ const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Ag
 const MESES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const TRIMESTRES = [["Janeiro","Fevereiro","Março"],["Abril","Maio","Junho"],["Julho","Agosto","Setembro"],["Outubro","Novembro","Dezembro"]];
 
-// Plugin de rótulos de valor acima de cada ponto/barra, em todos os gráficos.
-Chart.register(ChartDataLabels);
-Chart.defaults.set('plugins.datalabels', {
-  anchor: 'end', align: 'top', offset: 4,
-  color: '#1F4242', font: { family: 'Sora', size: 10, weight: '600' },
-  formatter: (value) => (value === null || value === undefined || isNaN(value)) ? '' : value
-});
-
 const charts = {};
 let countdownTimer = null;
 let nextRefreshAt = null;
@@ -575,13 +567,27 @@ let lastImpactoRows = null;
 
 function fmtBRL(n){
   if (n === null || n === undefined || isNaN(n)) return 'R$ 0,00';
-  return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits: 2});
 }
 
 function fmtPct(n){
   if (n === null || n === undefined || isNaN(n)) return '—';
   return Math.round(n * 100) + '%';
 }
+
+// Formatação padrão pt-BR (vírgula decimal, ponto de milhar), no máximo 2 casas decimais.
+function fmtNum(n, maxDecimals = 2){
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return n.toLocaleString('pt-BR', { maximumFractionDigits: maxDecimals });
+}
+
+// Plugin de rótulos de valor acima de cada ponto/barra, em todos os gráficos.
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels', {
+  anchor: 'end', align: 'top', offset: 6, clamp: true,
+  color: '#1F4242', font: { family: 'Sora', size: 10, weight: '600' },
+  formatter: (value) => (value === null || value === undefined || isNaN(value) || value === 0) ? '' : fmtNum(value)
+});
 
 function cellVal(row, idx){
   if (!row || !row.c || !row.c[idx]) return null;
@@ -1155,7 +1161,7 @@ function renderImpacto3Charts(im3){
     html += `<div class="chart-box">
       <h3>${s.label}</h3>
       <div class="kpis" style="margin-bottom:10px;">
-        <div class="kpi"><div class="label">Total histórico</div><div class="value">${total.toLocaleString('pt-BR')}</div></div>
+        <div class="kpi"><div class="label">Total histórico</div><div class="value">${fmtNum(total)}</div></div>
       </div>
       <div class="chart-wrap"><canvas id="im-chart3-serie-${idx}"></canvas></div>
     </div>`;
@@ -1194,6 +1200,24 @@ function parseImpacto4(rows, bounds){
 // ---- Chart helpers ----
 function destroyChart(id){ if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
+// Escolhe a direção do rótulo (ângulo em graus, 0=topo, sentido horário) com
+// base na tendência da linha ao redor do ponto, pra evitar que o número fique
+// em cima do próprio traço quando a linha sobe ou desce logo em seguida.
+function labelAlign(data, idx, type){
+  if (type !== 'line') return 'top';
+  const cur = data[idx];
+  if (cur === null || cur === undefined || isNaN(cur)) return 'top';
+  const prev = idx > 0 ? data[idx - 1] : null;
+  const next = idx < data.length - 1 ? data[idx + 1] : null;
+  const risingAfter = (next !== null && next !== undefined && !isNaN(next) && next > cur);
+  const fallingAfter = (next !== null && next !== undefined && !isNaN(next) && next < cur);
+  const risingBefore = (prev !== null && prev !== undefined && !isNaN(prev) && cur > prev);
+  const fallingBefore = (prev !== null && prev !== undefined && !isNaN(prev) && cur < prev);
+  if (risingAfter && !fallingBefore) return -55; // linha sobe daqui pra frente: rótulo pende pra esquerda
+  if (fallingAfter && !risingBefore) return 55; // linha caiu até aqui e segue caindo: rótulo pende pra direita
+  return 'top';
+}
+
 function styleForType(color, type){
   if (type === 'line'){
     return { borderColor: color, backgroundColor: color, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, fill: false, borderWidth: 2 };
@@ -1211,9 +1235,10 @@ function renderChart(canvasId, labels, data, opts = {}){
       styleForType(opts.color || '#1F4242', type),
       { datalabels: {
           color: opts.color || '#1F4242',
+          align: (ctx2) => labelAlign(data, ctx2.dataIndex, type),
           formatter: (value) => {
-            if (value === null || value === undefined || isNaN(value)) return '';
-            return opts.labelFormatter ? opts.labelFormatter(value) : value;
+            if (value === null || value === undefined || isNaN(value) || value === 0) return '';
+            return opts.labelFormatter ? opts.labelFormatter(value) : fmtNum(value);
           }
         }
       }
@@ -1232,7 +1257,7 @@ function renderChart(canvasId, labels, data, opts = {}){
   if (allVals.length && type === 'line'){
     const dMax = Math.max(...allVals);
     const dMin = Math.min(...allVals, 0);
-    const pad = Math.max((dMax - dMin) * 0.15, dMax * 0.05, 1);
+    const pad = Math.max((dMax - dMin) * 0.32, dMax * 0.18, 2);
     yMax = Math.ceil(dMax + pad);
   }
   charts[canvasId] = new Chart(ctx, {
@@ -1246,9 +1271,9 @@ function renderChart(canvasId, labels, data, opts = {}){
         tooltip: {
           callbacks: {
             label: (ctx2) => {
-              if (ctx2.dataset.label === 'Meta') return 'Meta: ' + ctx2.parsed.y;
+              if (ctx2.dataset.label === 'Meta') return 'Meta: ' + fmtNum(ctx2.parsed.y);
               if (opts.tooltipCallbacks && opts.tooltipCallbacks.label) return opts.tooltipCallbacks.label(ctx2);
-              return (opts.seriesLabel || 'Resultado') + ': ' + ctx2.parsed.y;
+              return (opts.seriesLabel || 'Resultado') + ': ' + fmtNum(ctx2.parsed.y);
             }
           },
           backgroundColor: '#1F4242', borderColor: '#3E6B6B', borderWidth: 1,
@@ -1281,6 +1306,7 @@ function renderRankingChart(canvasId, entries, color){
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: (ctx2) => fmtNum(ctx2.parsed.x) },
         backgroundColor: '#1F4242', borderColor: '#3E6B6B', borderWidth: 1,
         titleColor: '#fff', bodyColor: '#E3EDE9', padding: 10,
         titleFont: { family: 'Sora' }, bodyFont: { family: 'Sora' }
@@ -1301,14 +1327,20 @@ function renderMultiChart(canvasId, labels, series, opts = {}){
   const datasets = series.map(s => Object.assign(
     { label: s.label, data: s.data, type },
     styleForType(s.color, type),
-    { datalabels: { color: s.color, formatter: (value) => (value === null || value === undefined || isNaN(value)) ? '' : value } }
+    { datalabels: {
+        color: s.color,
+        display: 'auto',
+        align: (ctx2) => labelAlign(s.data, ctx2.dataIndex, type),
+        formatter: (value) => (value === null || value === undefined || isNaN(value) || value === 0) ? '' : fmtNum(value)
+      }
+    }
   ));
   const allVals = series.flatMap(s => s.data).filter(v => v !== null && v !== undefined && !isNaN(v));
   let yMax;
   if (allVals.length && type === 'line'){
     const dMax = Math.max(...allVals);
     const dMin = Math.min(...allVals, 0);
-    const pad = Math.max((dMax - dMin) * 0.15, dMax * 0.05, 1);
+    const pad = Math.max((dMax - dMin) * 0.32, dMax * 0.18, 2);
     yMax = Math.ceil(dMax + pad);
   }
   charts[canvasId] = new Chart(ctx, {
@@ -1320,6 +1352,7 @@ function renderMultiChart(canvasId, labels, series, opts = {}){
       plugins: {
         legend: { display: true, labels: { color: '#5B7070', font: { family: 'Sora', size: 11 } } },
         tooltip: {
+          callbacks: { label: (ctx2) => (ctx2.dataset.label || 'Resultado') + ': ' + fmtNum(ctx2.parsed.y) },
           backgroundColor: '#1F4242', borderColor: '#3E6B6B', borderWidth: 1,
           titleColor: '#fff', bodyColor: '#E3EDE9', padding: 10,
           titleFont: { family: 'Sora' }, bodyFont: { family: 'Sora' }
@@ -1345,22 +1378,22 @@ function renderAdministrativo(rows){
   }
 
   const i1 = parseIndicador1(rows, bounds);
-  document.getElementById('kpi1-atual').textContent = i1.atual ?? '—';
+  document.getElementById('kpi1-atual').textContent = i1.atual !== null && i1.atual !== undefined ? fmtNum(i1.atual) : '—';
   renderChart('chart1-mensal', MESES_ABREV, MESES.map(m => i1.values[m]), { color: '#1F4242', seriesLabel: 'Contratos ativos' });
   renderChart('chart1-trimestral', ['Q1','Q2','Q3','Q4'], i1.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
 
   const i2 = parseIndicador2(rows, bounds);
-  document.getElementById('kpi2-atual').textContent = i2.atual ?? '—';
+  document.getElementById('kpi2-atual').textContent = i2.atual !== null && i2.atual !== undefined ? fmtNum(i2.atual) : '—';
   renderChart('chart2-mensal', MESES_ABREV, MESES.map(m => i2.values[m]), { color: '#3E6B6B', seriesLabel: 'Contratos por colaborador' });
   renderChart('chart2-trimestral', ['Q1','Q2','Q3','Q4'], i2.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
 
   const i3 = parseIndicador3(rows, bounds);
-  document.getElementById('kpi3-total').textContent = i3.totalAnual;
+  document.getElementById('kpi3-total').textContent = fmtNum(i3.totalAnual);
   renderChart('chart3-mensal', MESES_ABREV, MESES.map(m => i3.values[m]), {
     color: '#773F3F', seriesLabel: 'Perdas',
     tooltipCallbacks: { label: (ctx) => {
       const mes = MESES[ctx.dataIndex];
-      const qtd = 'Perdas: ' + ctx.parsed.y;
+      const qtd = 'Perdas: ' + fmtNum(ctx.parsed.y);
       const cli = i3.clientes[mes];
       return cli ? [qtd, 'Cliente(s): ' + cli] : qtd;
     } }
@@ -1386,7 +1419,7 @@ function renderAdministrativo(rows){
   });
 
   const i5 = parseIndicador5(rows, bounds);
-  document.getElementById('kpi5-total').textContent = i5.totalAnual;
+  document.getElementById('kpi5-total').textContent = fmtNum(i5.totalAnual);
   renderChart('chart5-mensal', MESES_ABREV, MESES.map(m => i5.values[m]), {
     color: '#8FA83E', seriesLabel: 'Ocorrências',
     tooltipCallbacks: { label: (ctx) => {
@@ -1432,23 +1465,23 @@ function renderComercial(rows){
   }
 
   const c1 = parseComercial1(rows, bounds);
-  document.getElementById('c-kpi1-total').textContent = c1.totalAnual;
-  document.getElementById('c-kpi1-media').textContent = c1.mediaMensal !== null ? Math.round(c1.mediaMensal * 10) / 10 : '—';
-  document.getElementById('c-kpi1-meta').textContent = c1.meta + ' / mês';
+  document.getElementById('c-kpi1-total').textContent = fmtNum(c1.totalAnual);
+  document.getElementById('c-kpi1-media').textContent = c1.mediaMensal !== null ? fmtNum(c1.mediaMensal, 0) : '—';
+  document.getElementById('c-kpi1-meta').textContent = fmtNum(c1.meta) + ' / mês';
   renderChart('c-chart1-mensal', MESES_ABREV, MESES.map(m => c1.values[m]), {
     color: '#1F4242', seriesLabel: 'Propostas', meta: c1.meta
   });
   renderChart('c-chart1-trimestral', ['Q1','Q2','Q3','Q4'], c1.quarterTotal, { color: '#8FC93E', seriesLabel: 'Propostas' });
 
   const c2 = parseComercial2(rows, bounds);
-  document.getElementById('c-kpi2-total').textContent = c2.totalAnual;
-  document.getElementById('c-kpi2-meta').textContent = c2.meta + ' / mês';
+  document.getElementById('c-kpi2-total').textContent = fmtNum(c2.totalAnual);
+  document.getElementById('c-kpi2-meta').textContent = fmtNum(c2.meta) + ' / mês';
   renderChart('c-chart2-mensal', MESES_ABREV, MESES.map(m => c2.values[m]), {
     color: '#3E6B6B', seriesLabel: 'Contratos ganhos', meta: c2.meta,
     tooltipCallbacks: { label: (ctx) => {
-      if (ctx.dataset.label === 'Meta') return 'Meta: ' + ctx.parsed.y;
+      if (ctx.dataset.label === 'Meta') return 'Meta: ' + fmtNum(ctx.parsed.y);
       const mes = MESES[ctx.dataIndex];
-      const qtd = 'Contratos: ' + ctx.parsed.y;
+      const qtd = 'Contratos: ' + fmtNum(ctx.parsed.y);
       const cli = c2.clientes[mes];
       return cli ? [qtd, 'Cliente(s): ' + cli] : qtd;
     } }
@@ -1459,7 +1492,7 @@ function renderComercial(rows){
   renderEquipTable(c3);
 
   const c4 = parseComercial4(rows, bounds);
-  document.getElementById('c-kpi4-total').textContent = c4.totalAnual;
+  document.getElementById('c-kpi4-total').textContent = fmtNum(c4.totalAnual);
   renderChart('c-chart4-mensal', MESES_ABREV, MESES.map(m => c4.values[m]), {
     color: '#773F3F', seriesLabel: 'Perdas',
     tooltipCallbacks: { label: (ctx) => {
@@ -1480,37 +1513,37 @@ function renderOperacional(rows){
   }
 
   const o1 = parseOperacional1(rows, bounds);
-  document.getElementById('o-kpi1-total').textContent = o1.mediaAnual !== null ? Math.round(o1.mediaAnual) : '—';
+  document.getElementById('o-kpi1-total').textContent = o1.mediaAnual !== null ? fmtNum(o1.mediaAnual, 0) : '—';
   renderChart('o-chart1-mensal', MESES_ABREV, MESES.map(m => o1.values[m]), {
     color: '#1F4242', seriesLabel: 'Bombonas/colaborador/dia',
     tooltipCallbacks: { label: (ctx) => {
       const mes = MESES[ctx.dataIndex];
       const det = o1.detalhes[mes];
-      const principal = 'Resultado: ' + ctx.parsed.y;
+      const principal = 'Resultado: ' + fmtNum(ctx.parsed.y);
       if (!det) return principal;
-      return [principal, 'Volume B50L: ' + det.volume, 'Colaboradores: ' + det.colaboradores, 'Dias trabalhados: ' + det.dias];
+      return [principal, 'Volume B50L: ' + fmtNum(det.volume), 'Colaboradores: ' + fmtNum(det.colaboradores), 'Dias trabalhados: ' + fmtNum(det.dias)];
     } }
   });
-  renderChart('o-chart1-trimestral', ['Q1','Q2','Q3','Q4'], o1.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
+  renderChart('o-chart1-trimestral', ['Q1','Q2','Q3','Q4'], o1.quarterAvg.map(v => v !== null ? Math.round(v) : null), { color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => fmtNum(v, 0) });
 
   const o2 = parseOperacional2(rows, bounds);
-  document.getElementById('o-kpi2-total').textContent = Math.round(o2.totalAnual);
-  renderChart('o-chart2-mensal', MESES_ABREV, MESES.map(m => o2.values[m]), {
-    color: '#3E6B6B', seriesLabel: 'Bombonas/colaborador/dia',
+  document.getElementById('o-kpi2-total').textContent = fmtNum(o2.totalAnual, 0);
+  renderChart('o-chart2-mensal', MESES_ABREV, MESES.map(m => o2.values[m] !== null ? Math.round(o2.values[m]) : null), {
+    color: '#3E6B6B', seriesLabel: 'Bombonas/colaborador/dia', labelFormatter: (v) => fmtNum(v, 0),
     tooltipCallbacks: { label: (ctx) => {
       const mes = MESES[ctx.dataIndex];
       const det = o2.detalhes[mes];
-      const principal = 'Resultado: ' + ctx.parsed.y;
+      const principal = 'Resultado: ' + fmtNum(ctx.parsed.y);
       if (!det) return principal;
-      return [principal, 'Volume B50L: ' + det.volume, 'Presenças: ' + det.presencas, 'Colaboradores: ' + det.colaboradores, 'Dias trabalhados: ' + det.dias];
+      return [principal, 'Volume B50L: ' + fmtNum(det.volume), 'Presenças: ' + fmtNum(det.presencas), 'Colaboradores: ' + fmtNum(det.colaboradores), 'Dias trabalhados: ' + fmtNum(det.dias)];
     } }
   });
-  renderChart('o-chart2-trimestral', ['Q1','Q2','Q3','Q4'], o2.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
+  renderChart('o-chart2-trimestral', ['Q1','Q2','Q3','Q4'], o2.quarterAvg.map(v => v !== null ? Math.round(v) : null), { color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => fmtNum(v, 0) });
 
   const o3 = parseOperacional3(rows, bounds);
-  document.getElementById('o-kpi3-total').textContent = o3.mediaAnual !== null ? Math.round(o3.mediaAnual) : '—';
+  document.getElementById('o-kpi3-total').textContent = o3.mediaAnual !== null ? fmtNum(o3.mediaAnual, 0) : '—';
   renderChart('o-chart3-mensal', MESES_ABREV, MESES.map(m => o3.values[m] !== null ? Math.round(o3.values[m]) : null), { color: '#8FA83E', seriesLabel: 'Bombonas (rotas)' });
-  renderChart('o-chart3-trimestral', ['Q1','Q2','Q3','Q4'], o3.quarterAvg.map(v => v !== null ? Math.round(v*10)/10 : null), { color: '#8FC93E', seriesLabel: 'Média' });
+  renderChart('o-chart3-trimestral', ['Q1','Q2','Q3','Q4'], o3.quarterAvg.map(v => v !== null ? Math.round(v) : null), { color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => fmtNum(v, 0) });
 
   const o4 = parseOperacional4(rows, bounds);
   document.getElementById('o-kpi4-total').textContent = fmtBRL(o4.mediaAnual);
@@ -1538,15 +1571,15 @@ function renderOperacional(rows){
   document.getElementById('o-kpi6-total').textContent = fmtPct(o6.mediaAnual);
   document.getElementById('o-kpi6-meta').textContent = fmtPct(o6.meta);
   renderChart('o-chart6-mensal', MESES_ABREV, MESES.map(m => o6.values[m] !== null ? Math.round(o6.values[m]*1000)/10 : null), {
-    color: '#1F4242', seriesLabel: 'Resultado', meta: Math.round(o6.meta*1000)/10, labelFormatter: (v) => v + '%',
+    color: '#1F4242', seriesLabel: 'Resultado', meta: Math.round(o6.meta*1000)/10, labelFormatter: (v) => fmtNum(v) + '%',
     tooltipCallbacks: { label: (ctx) => {
-      if (ctx.dataset.label === 'Meta') return 'Meta: ' + ctx.parsed.y + '%';
-      return 'Resultado: ' + ctx.parsed.y + '%';
+      if (ctx.dataset.label === 'Meta') return 'Meta: ' + fmtNum(ctx.parsed.y) + '%';
+      return 'Resultado: ' + fmtNum(ctx.parsed.y) + '%';
     } }
   });
   renderChart('o-chart6-trimestral', ['Q1','Q2','Q3','Q4'], o6.quarterAvg.map(v => v !== null ? Math.round(v*1000)/10 : null), {
-    color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => v + '%',
-    tooltipCallbacks: { label: (ctx) => ctx.parsed.y + '%' }
+    color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => fmtNum(v) + '%',
+    tooltipCallbacks: { label: (ctx) => fmtNum(ctx.parsed.y) + '%' }
   });
 }
 
@@ -1558,44 +1591,44 @@ function renderDP(rows){
   }
 
   const d1 = parseDP1(rows, bounds);
-  document.getElementById('d-kpi1-total').textContent = d1.mediaAnual !== null ? Math.round(d1.mediaAnual * 10) / 10 : '—';
+  document.getElementById('d-kpi1-total').textContent = d1.mediaAnual !== null ? fmtNum(d1.mediaAnual, 1) : '—';
   renderChart('d-chart1-mensal', MESES_ABREV, MESES.map(m => d1.values[m]), { color: '#1F4242', seriesLabel: 'Faltas' });
   renderChart('d-chart1-trimestral', ['Q1','Q2','Q3','Q4'], d1.quarterSum, { color: '#8FC93E', seriesLabel: 'Faltas' });
 
   const d2 = parseDP2(rows, bounds);
-  document.getElementById('d-kpi2-total').textContent = d2.totalAnual;
+  document.getElementById('d-kpi2-total').textContent = fmtNum(d2.totalAnual);
   renderChart('d-chart2-mensal', MESES_ABREV, MESES.map(m => d2.values[m]), {
     color: '#3E6B6B', seriesLabel: 'Faltas'
   });
   renderChart('d-chart2-trimestral', ['Q1','Q2','Q3','Q4'], d2.quarterSum, { color: '#8FC93E', seriesLabel: 'Faltas' });
 
   const d3 = parseDP3(rows, bounds);
-  document.getElementById('d-kpi3-coleta').textContent = d3.mediaAnual.coleta !== null ? d3.mediaAnual.coleta.toFixed(1) + 'h' : '—';
-  document.getElementById('d-kpi3-base').textContent = d3.mediaAnual.base !== null ? d3.mediaAnual.base.toFixed(1) + 'h' : '—';
-  document.getElementById('d-kpi3-administrativo').textContent = d3.mediaAnual.administrativo !== null ? d3.mediaAnual.administrativo.toFixed(1) + 'h' : '—';
+  document.getElementById('d-kpi3-coleta').textContent = d3.mediaAnual.coleta !== null ? fmtNum(Math.round(d3.mediaAnual.coleta)) + 'h' : '—';
+  document.getElementById('d-kpi3-base').textContent = d3.mediaAnual.base !== null ? fmtNum(Math.round(d3.mediaAnual.base)) + 'h' : '—';
+  document.getElementById('d-kpi3-administrativo').textContent = d3.mediaAnual.administrativo !== null ? fmtNum(Math.round(d3.mediaAnual.administrativo)) + 'h' : '—';
   renderMultiChart('d-chart3-mensal', MESES_ABREV, [
-    { label: 'Coleta', color: '#1F4242', data: MESES.map(m => d3.coleta[m]) },
-    { label: 'Base', color: '#B87333', data: MESES.map(m => d3.base[m]) },
-    { label: 'Administrativo', color: '#773F3F', data: MESES.map(m => d3.administrativo[m]) }
+    { label: 'Coleta', color: '#1F4242', data: MESES.map(m => d3.coleta[m] !== null ? Math.round(d3.coleta[m]) : null) },
+    { label: 'Base', color: '#B87333', data: MESES.map(m => d3.base[m] !== null ? Math.round(d3.base[m]) : null) },
+    { label: 'Administrativo', color: '#773F3F', data: MESES.map(m => d3.administrativo[m] !== null ? Math.round(d3.administrativo[m]) : null) }
   ]);
   renderMultiChart('d-chart3-trimestral', ['Q1','Q2','Q3','Q4'], [
-    { label: 'Coleta', color: '#1F4242', data: d3.quarterAvgColeta.map(v => v !== null ? Math.round(v*10)/10 : null) },
-    { label: 'Base', color: '#B87333', data: d3.quarterAvgBase.map(v => v !== null ? Math.round(v*10)/10 : null) },
-    { label: 'Administrativo', color: '#773F3F', data: d3.quarterAvgAdministrativo.map(v => v !== null ? Math.round(v*10)/10 : null) }
+    { label: 'Coleta', color: '#1F4242', data: d3.quarterAvgColeta.map(v => v !== null ? Math.round(v) : null) },
+    { label: 'Base', color: '#B87333', data: d3.quarterAvgBase.map(v => v !== null ? Math.round(v) : null) },
+    { label: 'Administrativo', color: '#773F3F', data: d3.quarterAvgAdministrativo.map(v => v !== null ? Math.round(v) : null) }
   ]);
 
   const d4 = parseDP4(rows, bounds);
-  document.getElementById('d-kpi4-total').textContent = d4.totalAnual;
+  document.getElementById('d-kpi4-total').textContent = fmtNum(d4.totalAnual);
   renderChart('d-chart4-mensal', MESES_ABREV, MESES.map(m => d4.values[m]), { color: '#773F3F', seriesLabel: 'Treinamentos' });
   renderChart('d-chart4-trimestral', ['Q1','Q2','Q3','Q4'], d4.quarterSum, { color: '#9C6262', seriesLabel: 'Treinamentos' });
 
   const d5 = parseDP5(rows, bounds);
-  document.getElementById('d-kpi5-total').textContent = d5.totalAnual;
+  document.getElementById('d-kpi5-total').textContent = fmtNum(d5.totalAnual);
   renderChart('d-chart5-mensal', MESES_ABREV, MESES.map(m => d5.values[m]), { color: '#B87333', seriesLabel: 'Colaboradores treinados' });
   renderChart('d-chart5-trimestral', ['Q1','Q2','Q3','Q4'], d5.quarterSum, { color: '#8FA83E', seriesLabel: 'Colaboradores treinados' });
 
   const d6 = parseDP6(rows, bounds);
-  document.getElementById('d-kpi6-total').textContent = d6.totalAnual;
+  document.getElementById('d-kpi6-total').textContent = fmtNum(d6.totalAnual);
   renderChart('d-chart6-mensal', MESES_ABREV, MESES.map(m => d6.values[m]), { color: '#8FA83E', seriesLabel: 'Colaboradores treinados' });
   renderChart('d-chart6-trimestral', ['Q1','Q2','Q3','Q4'], d6.quarterSum, { color: '#B87333', seriesLabel: 'Colaboradores treinados' });
 }
@@ -1608,19 +1641,19 @@ function renderImpacto(rows){
   }
 
   const im1 = parseImpacto1(rows, bounds);
-  document.getElementById('im-kpi1-total').textContent = im1.totalAnual.toLocaleString('pt-BR') + ' ton';
-  document.getElementById('im-kpi1-meta').textContent = im1.meta + ' ton/mês';
+  document.getElementById('im-kpi1-total').textContent = fmtNum(im1.totalAnual) + ' ton';
+  document.getElementById('im-kpi1-meta').textContent = fmtNum(im1.meta) + ' ton/mês';
   renderChart('im-chart1-mensal', MESES_ABREV, MESES.map(m => im1.values[m]), {
     color: '#1F4242', seriesLabel: 'Resíduos desviados (ton)', meta: im1.meta,
     tooltipCallbacks: { label: (ctx) => {
-      if (ctx.dataset.label === 'Meta') return 'Meta: ' + ctx.parsed.y + ' ton';
-      return 'Resíduos: ' + ctx.parsed.y + ' ton';
+      if (ctx.dataset.label === 'Meta') return 'Meta: ' + fmtNum(ctx.parsed.y) + ' ton';
+      return 'Resíduos: ' + fmtNum(ctx.parsed.y) + ' ton';
     } }
   });
   renderChart('im-chart1-trimestral', ['Q1','Q2','Q3','Q4'], im1.quarterSum, { color: '#8FC93E', seriesLabel: 'Resíduos (ton)' });
 
   const im2 = parseImpacto2(rows, bounds);
-  document.getElementById('im-kpi2-total').textContent = im2.totalAnual.toLocaleString('pt-BR') + ' ton';
+  document.getElementById('im-kpi2-total').textContent = fmtNum(im2.totalAnual) + ' ton';
   renderChart('im-chart2-mensal', MESES_ABREV, MESES.map(m => im2.values[m]), { color: '#3E6B6B', seriesLabel: 'Resíduos desviados (ton)' });
   renderChart('im-chart2-trimestral', ['Q1','Q2','Q3','Q4'], im2.quarterSum, { color: '#8FC93E', seriesLabel: 'Resíduos (ton)' });
 
@@ -1628,11 +1661,13 @@ function renderImpacto(rows){
   renderImpacto3Charts(im3);
 
   const im4 = parseImpacto4(rows, bounds);
-  document.getElementById('im-kpi4-total').textContent = im4.totalAnual.toLocaleString('pt-BR');
-  document.getElementById('im-kpi4-historico').textContent = im4.totalHistorico !== null ? im4.totalHistorico.toLocaleString('pt-BR') : '—';
+  document.getElementById('im-kpi4-total').textContent = fmtNum(im4.totalAnual);
+  document.getElementById('im-kpi4-historico').textContent = im4.totalHistorico !== null ? fmtNum(im4.totalHistorico) : '—';
   renderChart('im-chart4-mensal', MESES_ABREV, MESES.map(m => im4.values[m]), { color: '#B87333', seriesLabel: 'Pessoas impactadas' });
   renderChart('im-chart4-trimestral', ['Q1','Q2','Q3','Q4'], im4.quarterSum, { color: '#9C6262', seriesLabel: 'Pessoas impactadas' });
-  renderChart('im-chart4-anos', im4.anoTotals.map(a => a.ano), im4.anoTotals.map(a => a.total), { color: '#8FA83E', seriesLabel: 'Pessoas impactadas' });
+  const anos4 = [...im4.anoTotals.map(a => a.ano), '2027', '2028'];
+  const vals4 = [...im4.anoTotals.map(a => a.total), null, null];
+  renderChart('im-chart4-anos', anos4, vals4, { color: '#8FA83E', seriesLabel: 'Pessoas impactadas' });
 }
 
 // ---- Refresh cycle ----
