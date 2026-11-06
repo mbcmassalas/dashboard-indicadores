@@ -96,6 +96,8 @@
   table.eq-table td.eq-ok{color:var(--ok); font-weight:600;}
   table.eq-table td.eq-off{color:var(--warn); font-weight:600;}
   table.eq-table td.eq-dash{color:var(--border); }
+  table.eq-table tr.eq-second td{background:var(--panel2);}
+  table.eq-table tr.eq-second td.eq-dash{color:var(--border);}
   .tab-nav-bottom{display:flex; justify-content:center; gap:12px; margin:8px 0 20px;}
   .tab-nav-btn{
     background:var(--teal); color:#fff; border:none; border-radius:20px;
@@ -255,7 +257,7 @@
 <section class="indicator">
   <div class="ind-header">
     <h2>3. Quantidade de Equipamentos para Novos Clientes</h2>
-    <span class="badge">Indicador 3 · 2026 · quantidade prevista por cliente</span>
+    <span class="badge">Indicador 3 · 2026 · quantidade prevista e realizada por cliente</span>
   </div>
   <div class="eq-table-wrap" id="c-equip-table"></div>
 </section>
@@ -861,7 +863,7 @@ function parseComercial2(rows, bounds){
 // rótulo ocupa uma coluna, mas o valor pode cair na coluna vizinha vazia).
 // Por isso cada coluna aceita mais de um índice candidato.
 const EQUIP_COLS = [
-  {idxs:[7], label:'Balde P'}, {idxs:[8,9], label:'Bombona 50L'}, {idxs:[10], label:'Bombona 80L'},
+  {idxs:[7], label:'Balde P'}, {idxs:[8], label:'Balde G'}, {idxs:[9], label:'Bombona 50L'}, {idxs:[10], label:'Bombona 80L'},
   {idxs:[11], label:'BigBag 1000L'}, {idxs:[12], label:'Contentor 80L'}, {idxs:[13], label:'Contentor 120L'},
   {idxs:[14], label:'Contentor 240L'}, {idxs:[15], label:'Contentor 700L'}, {idxs:[16], label:'Pedaleira'}
 ];
@@ -1417,24 +1419,31 @@ function renderAdministrativo(rows){
 function renderEquipTable(parsed){
   const container = document.getElementById('c-equip-table');
   const cols = parsed.usedCols;
-  let html = '<table class="eq-table"><thead><tr><th>Cliente</th><th>Periodicidade</th>';
+  const TIPOS = ['Prevista', 'Realizada'];
+  let html = '<table class="eq-table"><thead><tr><th>Cliente</th><th>Periodicidade</th><th>Quantidade</th>';
   cols.forEach(c => { html += `<th>${c.label}</th>`; });
   html += '</tr></thead><tbody>';
   parsed.clientes.forEach(cl => {
-    const linha = cl.linhas['Prevista'];
-    if (!linha) return;
-    html += '<tr>';
-    html += `<td class="eq-client">${cl.cliente}</td>`;
-    html += `<td class="eq-period">${cl.periodicidade}</td>`;
-    cols.forEach(c => {
-      const v = linha[c.label];
-      if (v === null || v === '-' || v === '' || v === undefined){
-        html += '<td class="eq-dash">—</td>';
-      } else {
-        html += `<td>${v}</td>`;
+    if (!cl.linhas['Prevista'] && !cl.linhas['Realizada']) return;
+    const periodo = String(cl.periodicidade || '').split(/\n+/).map(t => t.trim()).filter(Boolean).join(' / ');
+    TIPOS.forEach((tipo, i) => {
+      const linha = cl.linhas[tipo] || {};
+      html += `<tr class="${i === 0 ? 'eq-first' : 'eq-second'}">`;
+      if (i === 0){
+        html += `<td class="eq-client" rowspan="2">${cl.cliente}</td>`;
+        html += `<td class="eq-period" rowspan="2">${periodo}</td>`;
       }
+      html += `<td class="eq-metric">${tipo}</td>`;
+      cols.forEach(c => {
+        const v = linha[c.label];
+        if (v === null || v === '-' || v === '' || v === undefined){
+          html += '<td class="eq-dash">—</td>';
+        } else {
+          html += `<td>${fmtNum(parseNumberFlexible(v))}</td>`;
+        }
+      });
+      html += '</tr>';
     });
-    html += '</tr>';
   });
   html += '</tbody></table>';
   container.innerHTML = html;
