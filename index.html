@@ -994,7 +994,7 @@ function parseOperacional3(rows, bounds){
 }
 
 function parseFinanceiro1(rows, bounds){
-  const [s,e] = bounds['4'];
+  const [s,e] = bounds['1'];
   const monthly = groupByMonth(rows, s, e, [5,6]);
   const values = {};
   MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
