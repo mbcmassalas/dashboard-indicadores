@@ -411,23 +411,6 @@
   </div>
 </section>
 
-<!-- INDICADOR 3 -->
-<section class="indicator">
-  <div class="ind-header">
-    <h2>3. Média das Horas Semanais Trabalhadas</h2>
-    <span class="badge">Indicador 3 · 2026 · Coleta, Base e Administrativo</span>
-  </div>
-  <div class="kpis">
-    <div class="kpi"><div class="label">Média anual · Coleta</div><div class="value" id="d-kpi3-coleta">—</div></div>
-    <div class="kpi"><div class="label">Média anual · Base</div><div class="value" id="d-kpi3-base">—</div></div>
-    <div class="kpi"><div class="label">Média anual · Administrativo</div><div class="value" id="d-kpi3-administrativo">—</div></div>
-  </div>
-  <div class="charts" style="grid-template-columns:1fr;">
-    <div class="chart-box"><h3>Mês a mês</h3><div class="chart-wrap tall"><canvas id="d-chart3-mensal"></canvas></div></div>
-    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap tall"><canvas id="d-chart3-trimestral"></canvas></div></div>
-  </div>
-</section>
-
 <!-- INDICADOR 4 -->
 <section class="indicator">
   <div class="ind-header">
@@ -1513,7 +1496,7 @@ function renderOperacional(rows){
 
   const o1 = parseOperacional1(rows, bounds);
   document.getElementById('o-kpi1-total').textContent = o1.mediaAnual !== null ? fmtNum(o1.mediaAnual, 0) : '—';
-  renderChart('o-chart1-mensal', MESES_ABREV, MESES.map(m => o1.values[m]), {
+  renderChart('o-chart1-mensal', MESES_ABREV, MESES.map(m => o1.values[m] !== null ? Math.round(o1.values[m]) : null), {
     color: '#1F4242', seriesLabel: 'Bombonas/colaborador/dia',
     tooltipCallbacks: { label: (ctx) => {
       const mes = MESES[ctx.dataIndex];
@@ -1609,21 +1592,6 @@ function renderDP(rows){
     color: '#3E6B6B', seriesLabel: 'Faltas'
   });
   renderChart('d-chart2-trimestral', ['Q1','Q2','Q3','Q4'], d2.quarterSum, { color: '#8FC93E', seriesLabel: 'Faltas' });
-
-  const d3 = parseDP3(rows, bounds);
-  document.getElementById('d-kpi3-coleta').textContent = d3.mediaAnual.coleta !== null ? fmtNum(Math.round(d3.mediaAnual.coleta)) + 'h' : '—';
-  document.getElementById('d-kpi3-base').textContent = d3.mediaAnual.base !== null ? fmtNum(Math.round(d3.mediaAnual.base)) + 'h' : '—';
-  document.getElementById('d-kpi3-administrativo').textContent = d3.mediaAnual.administrativo !== null ? fmtNum(Math.round(d3.mediaAnual.administrativo)) + 'h' : '—';
-  renderMultiChart('d-chart3-mensal', MESES_ABREV, [
-    { label: 'Coleta', color: '#1F4242', align: 'top', data: MESES.map(m => d3.coleta[m] !== null ? Math.round(d3.coleta[m]) : null) },
-    { label: 'Base', color: '#B87333', align: 'bottom', data: MESES.map(m => d3.base[m] !== null ? Math.round(d3.base[m]) : null) },
-    { label: 'Administrativo', color: '#773F3F', align: 'bottom', data: MESES.map(m => d3.administrativo[m] !== null ? Math.round(d3.administrativo[m]) : null) }
-  ], { autoZoom: true });
-  renderMultiChart('d-chart3-trimestral', ['Q1','Q2','Q3','Q4'], [
-    { label: 'Coleta', color: '#1F4242', align: 'top', data: d3.quarterAvgColeta.map(v => v !== null ? Math.round(v) : null) },
-    { label: 'Base', color: '#B87333', align: 'bottom', data: d3.quarterAvgBase.map(v => v !== null ? Math.round(v) : null) },
-    { label: 'Administrativo', color: '#773F3F', align: 'bottom', data: d3.quarterAvgAdministrativo.map(v => v !== null ? Math.round(v) : null) }
-  ], { autoZoom: true });
 
   const d4 = parseDP4(rows, bounds);
   document.getElementById('d-kpi4-total').textContent = fmtNum(d4.totalAnual);
