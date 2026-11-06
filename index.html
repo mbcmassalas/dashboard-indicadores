@@ -129,6 +129,7 @@
   <div class="tab active" id="tabbtn-administrativo" onclick="showTab('administrativo')">Administrativo</div>
   <div class="tab" id="tabbtn-comercial" onclick="showTab('comercial')">Comercial</div>
   <div class="tab" id="tabbtn-operacional" onclick="showTab('operacional')">Operacional</div>
+  <div class="tab" id="tabbtn-financeiro" onclick="showTab('financeiro')">Financeiro</div>
   <div class="tab" id="tabbtn-dp" onclick="showTab('dp')">Departamento Pessoal</div>
   <div class="tab" id="tabbtn-impacto" onclick="showTab('impacto')">Impacto</div>
 </div>
@@ -324,49 +325,54 @@
   </div>
 </section>
 
-<!-- INDICADOR 4 -->
+</div>
+
+<!-- ==================== FINANCEIRO ==================== -->
+<div class="tab-panel" id="tab-financeiro">
+
+<!-- INDICADOR 1 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>4. Custo Equipe de Transbordo e Limpeza (por Tonelada Operada)</h2>
-    <span class="badge">Indicador 4 · 2026</span>
+    <h2>1. Custo Equipe de Transbordo e Limpeza (por Tonelada Operada)</h2>
+    <span class="badge">Indicador 1 · 2026</span>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi4-total">—</div></div>
+    <div class="kpi"><div class="label">Média anual</div><div class="value" id="f-kpi1-total">—</div></div>
   </div>
   <div class="charts">
-    <div class="chart-box"><h3>Mês a mês (R$/tonelada)</h3><div class="chart-wrap"><canvas id="o-chart4-mensal"></canvas></div></div>
-    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="o-chart4-trimestral"></canvas></div></div>
+    <div class="chart-box"><h3>Mês a mês (R$/tonelada)</h3><div class="chart-wrap"><canvas id="f-chart1-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="f-chart1-trimestral"></canvas></div></div>
   </div>
 </section>
 
-<!-- INDICADOR 5 -->
+<!-- INDICADOR 2 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>5. Custo Coleta de Resíduos (por Tonelada Operada) · Unidade BH</h2>
-    <span class="badge">Indicador 5 · 2026</span>
+    <h2>2. Custo Coleta de Resíduos (por Tonelada Operada) · Unidade BH</h2>
+    <span class="badge">Indicador 2 · 2026</span>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi5-total">—</div></div>
+    <div class="kpi"><div class="label">Média anual</div><div class="value" id="f-kpi2-total">—</div></div>
   </div>
   <div class="charts">
-    <div class="chart-box"><h3>Mês a mês (R$/tonelada)</h3><div class="chart-wrap"><canvas id="o-chart5-mensal"></canvas></div></div>
-    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="o-chart5-trimestral"></canvas></div></div>
+    <div class="chart-box"><h3>Mês a mês (R$/tonelada)</h3><div class="chart-wrap"><canvas id="f-chart2-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="f-chart2-trimestral"></canvas></div></div>
   </div>
 </section>
 
-<!-- INDICADOR 6 -->
+<!-- INDICADOR 3 -->
 <section class="indicator">
   <div class="ind-header">
-    <h2>6. Resultado Operacional</h2>
-    <span class="badge">Indicador 6 · 2026</span>
+    <h2>3. Resultado Operacional</h2>
+    <span class="badge">Indicador 3 · 2026</span>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="label">Média anual</div><div class="value" id="o-kpi6-total">—</div></div>
-    <div class="kpi"><div class="label">Meta anual</div><div class="value" id="o-kpi6-meta">—</div></div>
+    <div class="kpi"><div class="label">Média anual</div><div class="value" id="f-kpi3-total">—</div></div>
+    <div class="kpi"><div class="label">Meta anual</div><div class="value" id="f-kpi3-meta">—</div></div>
   </div>
   <div class="charts">
-    <div class="chart-box"><h3>Mês a mês (com meta)</h3><div class="chart-wrap"><canvas id="o-chart6-mensal"></canvas></div></div>
-    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="o-chart6-trimestral"></canvas></div></div>
+    <div class="chart-box"><h3>Mês a mês (com meta)</h3><div class="chart-wrap"><canvas id="f-chart3-mensal"></canvas></div></div>
+    <div class="chart-box"><h3>Média trimestral</h3><div class="chart-wrap"><canvas id="f-chart3-trimestral"></canvas></div></div>
   </div>
 </section>
 
@@ -548,6 +554,7 @@ const GID_COMERCIAL = '19455487';
 const GID_OPERACIONAL = '2037495349';
 const GID_DP = '846434514';
 const GID_IMPACTO = '1557499448';
+const GID_FINANCEIRO = '1010403275';
 const REFRESH_MS = 24 * 60 * 60 * 1000;
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -563,6 +570,7 @@ let lastComercialRows = null;
 let lastOperacionalRows = null;
 let lastDPRows = null;
 let lastImpactoRows = null;
+let lastFinanceiroRows = null;
 
 function fmtBRL(n){
   if (n === null || n === undefined || isNaN(n)) return 'R$ 0,00';
@@ -594,7 +602,7 @@ function cellVal(row, idx){
 }
 
 // ---- Tabs ----
-const TAB_ORDER = ['administrativo','comercial','operacional','dp','impacto'];
+const TAB_ORDER = ['administrativo','comercial','operacional','financeiro','dp','impacto'];
 
 function showTab(name){
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
@@ -630,6 +638,7 @@ function toggleChartType(){
   if (lastAdminRows) renderAdministrativo(lastAdminRows);
   if (lastComercialRows) renderComercial(lastComercialRows);
   if (lastOperacionalRows) renderOperacional(lastOperacionalRows);
+  if (lastFinanceiroRows) renderFinanceiro(lastFinanceiroRows);
   if (lastDPRows) renderDP(lastDPRows);
   if (lastImpactoRows) renderImpacto(lastImpactoRows);
 }
@@ -984,7 +993,7 @@ function parseOperacional3(rows, bounds){
   return { values, mediaAnual, quarterAvg: quarterAverage(values) };
 }
 
-function parseOperacional4(rows, bounds){
+function parseFinanceiro1(rows, bounds){
   const [s,e] = bounds['4'];
   const monthly = groupByMonth(rows, s, e, [5,6]);
   const values = {};
@@ -993,8 +1002,8 @@ function parseOperacional4(rows, bounds){
   return { values, mediaAnual, quarterAvg: quarterAverage(values) };
 }
 
-function parseOperacional5(rows, bounds){
-  const [s,e] = bounds['5'];
+function parseFinanceiro2(rows, bounds){
+  const [s,e] = bounds['2'];
   const monthly = groupByMonth(rows, s, e, [5,6]);
   const values = {};
   MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
@@ -1002,8 +1011,8 @@ function parseOperacional5(rows, bounds){
   return { values, mediaAnual, quarterAvg: quarterAverage(values) };
 }
 
-function parseOperacional6(rows, bounds){
-  const [s,e] = bounds['6'];
+function parseFinanceiro3(rows, bounds){
+  const [s,e] = bounds['3'];
   const monthly = groupByMonth(rows, s, e, [5,6]);
   const values = {};
   MESES.forEach(m => { const ent = monthly[m]; values[m] = ent && ent[0] ? parseNumberFlexible(ent[0][0]) : null; });
@@ -1498,7 +1507,7 @@ function renderComercial(rows){
 // ---- Render: Operacional ----
 function renderOperacional(rows){
   const bounds = findBlocks(rows);
-  if (!bounds['1'] || !bounds['2'] || !bounds['3'] || !bounds['4'] || !bounds['5'] || !bounds['6']) {
+  if (!bounds['1'] || !bounds['2'] || !bounds['3']) {
     throw new Error('Não foi possível localizar todos os indicadores do Operacional (estrutura pode ter mudado).');
   }
 
@@ -1535,39 +1544,48 @@ function renderOperacional(rows){
   renderChart('o-chart3-mensal', MESES_ABREV, MESES.map(m => o3.values[m] !== null ? Math.round(o3.values[m]) : null), { color: '#8FA83E', seriesLabel: 'Bombonas (rotas)' });
   renderChart('o-chart3-trimestral', ['Q1','Q2','Q3','Q4'], o3.quarterAvg.map(v => v !== null ? Math.round(v) : null), { color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => fmtNum(v, 0) });
 
-  const o4 = parseOperacional4(rows, bounds);
-  document.getElementById('o-kpi4-total').textContent = fmtBRL(o4.mediaAnual);
-  renderChart('o-chart4-mensal', MESES_ABREV, MESES.map(m => o4.values[m]), {
+}
+
+// ---- Render: Financeiro ----
+function renderFinanceiro(rows){
+  const bounds = findBlocks(rows);
+  if (!bounds['1'] || !bounds['2'] || !bounds['3']) {
+    throw new Error('Não foi possível localizar todos os indicadores do Financeiro (estrutura pode ter mudado).');
+  }
+
+  const f1 = parseFinanceiro1(rows, bounds);
+  document.getElementById('f-kpi1-total').textContent = fmtBRL(f1.mediaAnual);
+  renderChart('f-chart1-mensal', MESES_ABREV, MESES.map(m => f1.values[m]), {
     color: '#773F3F', seriesLabel: 'Custo/tonelada', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
   });
-  renderChart('o-chart4-trimestral', ['Q1','Q2','Q3','Q4'], o4.quarterAvg, {
+  renderChart('f-chart1-trimestral', ['Q1','Q2','Q3','Q4'], f1.quarterAvg, {
     color: '#9C6262', seriesLabel: 'Média', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
   });
 
-  const o5 = parseOperacional5(rows, bounds);
-  document.getElementById('o-kpi5-total').textContent = fmtBRL(o5.mediaAnual);
-  renderChart('o-chart5-mensal', MESES_ABREV, MESES.map(m => o5.values[m]), {
+  const f2 = parseFinanceiro2(rows, bounds);
+  document.getElementById('f-kpi2-total').textContent = fmtBRL(f2.mediaAnual);
+  renderChart('f-chart2-mensal', MESES_ABREV, MESES.map(m => f2.values[m]), {
     color: '#B87333', seriesLabel: 'Custo/tonelada', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
   });
-  renderChart('o-chart5-trimestral', ['Q1','Q2','Q3','Q4'], o5.quarterAvg, {
+  renderChart('f-chart2-trimestral', ['Q1','Q2','Q3','Q4'], f2.quarterAvg, {
     color: '#8FA83E', seriesLabel: 'Média', labelFormatter: fmtBRL,
     tooltipCallbacks: { label: (ctx) => fmtBRL(ctx.parsed.y) }
   });
 
-  const o6 = parseOperacional6(rows, bounds);
-  document.getElementById('o-kpi6-total').textContent = fmtPct(o6.mediaAnual);
-  document.getElementById('o-kpi6-meta').textContent = fmtPct(o6.meta);
-  renderChart('o-chart6-mensal', MESES_ABREV, MESES.map(m => o6.values[m] !== null ? Math.round(o6.values[m]*1000)/10 : null), {
-    color: '#1F4242', seriesLabel: 'Resultado', meta: Math.round(o6.meta*1000)/10, labelFormatter: (v) => fmtNum(v) + '%',
+  const f3 = parseFinanceiro3(rows, bounds);
+  document.getElementById('f-kpi3-total').textContent = fmtPct(f3.mediaAnual);
+  document.getElementById('f-kpi3-meta').textContent = fmtPct(f3.meta);
+  renderChart('f-chart3-mensal', MESES_ABREV, MESES.map(m => f3.values[m] !== null ? Math.round(f3.values[m]*1000)/10 : null), {
+    color: '#1F4242', seriesLabel: 'Resultado', meta: Math.round(f3.meta*1000)/10, labelFormatter: (v) => fmtNum(v) + '%',
     tooltipCallbacks: { label: (ctx) => {
       if (ctx.dataset.label === 'Meta') return 'Meta: ' + fmtNum(ctx.parsed.y) + '%';
       return 'Resultado: ' + fmtNum(ctx.parsed.y) + '%';
     } }
   });
-  renderChart('o-chart6-trimestral', ['Q1','Q2','Q3','Q4'], o6.quarterAvg.map(v => v !== null ? Math.round(v*1000)/10 : null), {
+  renderChart('f-chart3-trimestral', ['Q1','Q2','Q3','Q4'], f3.quarterAvg.map(v => v !== null ? Math.round(v*1000)/10 : null), {
     color: '#8FC93E', seriesLabel: 'Média', labelFormatter: (v) => fmtNum(v) + '%',
     tooltipCallbacks: { label: (ctx) => fmtNum(ctx.parsed.y) + '%' }
   });
@@ -1663,21 +1681,24 @@ function renderImpacto(rows){
 // ---- Refresh cycle ----
 async function refresh(){
   try{
-    const [adminJson, comercialJson, operacionalJson, dpJson, impactoJson] = await Promise.all([
+    const [adminJson, comercialJson, operacionalJson, financeiroJson, dpJson, impactoJson] = await Promise.all([
       loadSheet(GID_ADMINISTRATIVO),
       loadSheet(GID_COMERCIAL),
       loadSheet(GID_OPERACIONAL),
+      loadSheet(GID_FINANCEIRO),
       loadSheet(GID_DP),
       loadSheet(GID_IMPACTO)
     ]);
     lastAdminRows = adminJson.table.rows;
     lastComercialRows = comercialJson.table.rows;
     lastOperacionalRows = operacionalJson.table.rows;
+    lastFinanceiroRows = financeiroJson.table.rows;
     lastDPRows = dpJson.table.rows;
     lastImpactoRows = impactoJson.table.rows;
     renderAdministrativo(lastAdminRows);
     renderComercial(lastComercialRows);
     renderOperacional(lastOperacionalRows);
+    renderFinanceiro(lastFinanceiroRows);
     renderDP(lastDPRows);
     renderImpacto(lastImpactoRows);
     document.getElementById('errorBanner').style.display = 'none';
