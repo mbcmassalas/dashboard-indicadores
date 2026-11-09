@@ -896,6 +896,9 @@ function parseComercial3(rows, bounds){
     const metricaRaw = cellVal(row, 6);
     const metrica = typeof metricaRaw === 'string' ? metricaRaw.trim() : null;
     if (!metrica) continue;
+    // Linhas sem nome de cliente depois do bloco completo (ex.: cliente
+    // removido da planilha) não podem sobrescrever os dados do cliente anterior.
+    if (metrica in current.linhas) { current = null; continue; }
     const vals = {};
     EQUIP_COLS.forEach(c => { vals[c.label] = equipCellVal(row, c); });
     current.linhas[metrica] = vals;
